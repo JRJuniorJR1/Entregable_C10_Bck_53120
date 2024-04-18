@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+</head>
+<body>
+    <h1>Tienda 5PHNX</h1>
+    <nav>
+        <ul>
+            <li><a href="/">Ver Inicio</a></li>
+            <li><a href="/products">Ver productos</a></li>
+            <li><a href="/carts">Ver carritos</a></li>
+            <li><a href="/realtimeproducts">Ver todo</a></li>
+        </ul>
+    </nav>
+
+    {{{body}}}
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
+    <script>
+
+        const socket = io();
+
+
+        socket.on('productoAgregado', () => {
+            location.reload();
+        });
+
+        socket.on('productoModificado', () => {
+            location.reload();
+        });
+
+        socket.on('productoEliminado', () => {
+            location.reload();
+        });
+
+
+        
+        socket.on('carritoAgregado', () => {
+            location.reload();
+        });
+
+        socket.on('productoAgregadoEnCarrito', () => {
+            location.reload();
+        });
+
+        socket.on('carritoEliminado', () => {
+            location.reload();
+        });
+
+        const pageTitle = document.title;
+
+        socket.emit('pageConnected', pageTitle);
+
+        window.onbeforeunload = () => {
+            socket.emit('pageDisconnected', pageTitle);
+        };
+    </script>
+
+</body>
+</html>
+
+
