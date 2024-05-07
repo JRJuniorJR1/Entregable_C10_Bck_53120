@@ -70,7 +70,6 @@ function agregarProducto(event) {
         price: document.getElementById('price').value,
         stock: document.getElementById('stock').value
     };
-    console.log(product.title, product.thumbnail, product.price, product.stock);
 
     const formData = new FormData(event.target);
     formData.forEach((value, key) => {
@@ -196,6 +195,5 @@ async function addToCartFromModal() {
         alert('Carrito no encontrado');
     }
 }
-
 
 </script>
