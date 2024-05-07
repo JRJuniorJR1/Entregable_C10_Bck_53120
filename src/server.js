@@ -6,7 +6,7 @@ import cartRouter from './routes/cartRoute.js';
 import path from 'path';
 import http from 'http';
 import { initializeSocketEvents } from './routes/socketEvents.js';
-
+import { MongoClient } from 'mongodb';
 
 const app = express();
 const server = http.createServer(app);

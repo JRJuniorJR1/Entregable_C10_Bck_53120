@@ -1,12 +1,90 @@
-<h1>Carrito</h1>
+<h1>Crear Carrito</h1>
+<form action="api/carts" method="POST" onsubmit="crearCarrito(event)">
+    <button type="submit">Crear Carrito</button>
+</form>
 
+<h2>Carritos creados:</h2>
 <ul>
-{{#each carts}}
-    <li>Carrito {{ id }}</li>
-    <ul>
-        {{#each products}}
-            <li>Producto ID: {{ productId }}, Cantidad: {{ quantity }}</li>
-        {{/each}}
-    </ul>
-{{/each}}
+    {{#each carts}}
+        <li>
+            <h3>Carrito: {{ _id }}</h3>
+            <p>Total:</p>
+            <ul>
+                {{#each products}}
+                    <li>
+                        Id: {{ productId }}- Producto: {{ title }} - Precio {{ price }} - Cantidad: {{ quantity }} - Total: 
+                        <button onclick="editProduct('{{ ../_id }}', '{{ productId }}')">Editar</button>
+                        <button onclick="deleteProduct('{{ ../_id }}', '{{ productId }}')">Eliminar</button>
+                    </li>
+                {{/each}}
+            </ul>
+            <button onclick="deleteCart('{{ _id }}')">Eliminar Carrito</button>
+        </li>
+    {{/each}}
 </ul>
+
+<script>
+    function crearCarrito(event) {
+        event.preventDefault();
+        
+        fetch('api/carts', {
+            method: 'POST'
+        })
+        .then(response => response.text())
+        .then(data => {
+            alert('¡Carrito creado con éxito!');
+            window.location.reload();
+        })
+        .catch(error => {
+            alert('Error al crear el carrito: ' + error.message);
+        });
+    }
+
+    function editProduct(cid, pid) {
+        const newQuantity = prompt('Ingrese la nueva cantidad:');
+        if (newQuantity) {
+            fetch(`api/carts/${cid}/products/${pid}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ quantity: newQuantity })
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+            })
+            .catch(error => console.error('Error:', error));
+        } else {
+            alert('Por favor ingrese la nueva cantidad.');
+        }
+    }
+
+    function deleteProduct(cid, pid) {
+        const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este producto del carrito?');
+        if (confirmDelete) {
+            fetch(`api/carts/${cid}/products/${pid}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    }
+
+    function deleteCart(id) {
+        const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este carrito?');
+        if (confirmDelete) {
+            fetch(`api/carts/${id}`, {
+                method: 'DELETE'
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    }
+</script>

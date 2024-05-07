@@ -46,6 +46,14 @@
             location.reload();
         });
 
+        socket.on('carritoActualizado', () => {
+            location.reload();
+        });
+
+        socket.on('productoEliminadoDelCarrito', () => {
+            location.reload();
+        });        
+
         socket.on('carritoEliminado', () => {
             location.reload();
         });

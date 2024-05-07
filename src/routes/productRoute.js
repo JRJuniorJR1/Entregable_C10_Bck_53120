@@ -1,76 +1,87 @@
 import express from 'express';
-import path from 'path';
-import { productManager } from '../ProductManager.js';
-import fs from 'fs';
+import { CartManager } from '../CartManager.js';
+import { ProductManager } from '../ProductManager.js';
+import { MongoClient, ObjectId } from 'mongodb';
 
 const router = express.Router();
 
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+const uri = 'mongodb://localhost:27017/Ecommerce';
+const client = new MongoClient(uri);
 
-const checkUserAgent = (req, res, next) => {
-  const userAgent = req.headers['user-agent'];
-  req.isPostman = userAgent.includes('Postman');
-  next();
-};
-
-router.get('/', checkUserAgent, (req, res) => {
-  try {
-    const products = productManager.getProducts();
-    if (req.isPostman) {
-      res.json(products);
-    } else {
-      res.render('pages/product', { title: 'Productos | 5PHNX', productData: products });
+async function connectToMongoDB() {
+    try {
+        await client.connect();
+        console.log('Conexión exitosa a MongoDB ProductRoute');
+    } catch (error) {
+        console.error('Error al conectar a MongoDB ProductRoute:', error);
     }
-  } catch (error) {
-    res.status(500).json({ error: 'Error al obtener los productos' });
-  }
-});
+}
 
-router.get('/:id', async (req, res) => {
-  const id = parseInt(req.params.id);
-  try {
-    const product = await productManager.getProductById(id);
-    res.json(product);
-  } catch (error) {
-    res.status(404).json({ error: error.message });
-  }
+connectToMongoDB();
+
+const database = client.db('Ecommerce');
+const productManager = new ProductManager(database);
+const cartManager = new CartManager(database, productManager);
+
+router.get('/carts', async (req, res) => {
+    try {
+        const carts = await cartManager.getAllCarts();
+        res.json(carts);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 router.post('/', async (req, res) => {
-  const product = req.body;
-  const result = await productManager.addProduct(product);
+    const product = req.body;
+    try {
+        req.app.get('io').emit('productoAgregado');
+        const result = await productManager.addProduct(product);
+        res.status(201).json(result);
+    } catch (error) {
+        if (error.message.includes('ya existe en la base de datos')) {
+            res.status(400).json({ error: 'El producto ya existe en la base de datos.' });
+        } else {
+            console.error('Error al agregar el producto:', error.message);
+            res.status(500).json({ error: 'Error al agregar el producto.' });
+        }
+    }
+});
 
-  if (result.message) {
-    req.app.get('io').emit('productoAgregado');
-    res.status(201).json({ product: result.product, message: result.message });
-  } else if (typeof result === 'string') {
-    res.status(400).json({ error: result });
-  } else {
-    res.status(500).json({ error: 'Error al agregar el producto' });
-  }
+router.get('/:id', async (req, res) => {
+    const id = req.params.id;
+    try {
+        const product = await productManager.getProductById(id);
+        if (!product) {
+            return res.status(404).json({ error: 'Producto no encontrado' });
+        }
+        res.json(product);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
 });
 
 router.put('/:id', async (req, res) => {
-  req.app.get('io').emit('productoModificado');
-  const id = parseInt(req.params.id);
-  try {
-    const { product, message } = await productManager.updateProduct(id, req.body);
-    res.json({ product, message });
-  } catch (error) {
-    res.status(404).json({ error: error.message });
-  }
+    const id = req.params.id;
+    const updatedFields = req.body;
+    try {
+        const result = await productManager.updateProduct(id, updatedFields);
+        req.app.get('io').emit('productoModificado');
+        res.json(result);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
 });
 
 router.delete('/:id', async (req, res) => {
-  req.app.get('io').emit('productoEliminado');
-  const id = parseInt(req.params.id);
-  try {
-    const product = await productManager.getProductById(id);
-    await productManager.deleteProduct(id);
-    res.json({ product, message: 'Producto eliminado satisfactoriamente' });
-  } catch (error) {
-    res.status(404).json({ error: error.message });
-  }
+    const id = req.params.id;
+    try {
+        const result = await productManager.deleteProduct(id);
+        req.app.get('io').emit('productoEliminado');
+        res.json(result);
+    } catch (error) {
+        res.status(404).json({ error: 'Producto no encontrado' });
+    }
 });
 
 export default router;
