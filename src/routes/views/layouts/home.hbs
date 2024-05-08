@@ -12,6 +12,7 @@
             <li><a href="/">Ver Inicio</a></li>
             <li><a href="/products">Ver productos</a></li>
             <li><a href="/carts">Ver carritos</a></li>
+            <li><a href="/chat">Chat comunidad</a></li>
             <li><a href="/realtimeproducts">Ver todo</a></li>
         </ul>
     </nav>
@@ -57,7 +58,7 @@
         socket.on('carritoEliminado', () => {
             location.reload();
         });
-
+        
         const pageTitle = document.title;
 
         socket.emit('pageConnected', pageTitle);
@@ -65,6 +66,8 @@
         window.onbeforeunload = () => {
             socket.emit('pageDisconnected', pageTitle);
         };
+
+
     </script>
 
 </body>

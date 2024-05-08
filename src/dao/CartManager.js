@@ -71,7 +71,7 @@ export class CartManager {
         if (productIndex !== -1) {
             const updatedProduct = {
                 ...cart.products[productIndex],
-                quantity: parseInt(cart.products[productIndex].quantity) + parseInt(quantity) // Suma las cantidades como números
+                quantity: parseInt(cart.products[productIndex].quantity) + parseInt(quantity)
             };
 
             await this.collection.updateOne(

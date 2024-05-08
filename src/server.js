@@ -3,6 +3,7 @@ import exphbs from 'express-handlebars';
 import viewRoute from './routes/viewRoute.js';
 import productRouter from './routes/productRoute.js';
 import cartRouter from './routes/cartRoute.js';
+import chatRouter from './routes/chatRoute.js'
 import path from 'path';
 import http from 'http';
 import { initializeSocketEvents } from './routes/socketEvents.js';
@@ -35,6 +36,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/api/products', productRouter);
 app.use('/api/carts', cartRouter);
+app.use('/api', chatRouter);
 app.use('/', viewRoute);
 
 server.listen(PORT, () => {

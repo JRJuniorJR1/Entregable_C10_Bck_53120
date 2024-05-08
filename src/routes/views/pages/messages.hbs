@@ -1,0 +1,129 @@
+<h1>Chat en línea</h1>
+<div id="chat-messages">
+    {{#each messages}}
+        <p id="message-{{this._id}}"><strong>{{this.user}}</strong>: {{this.message}} 
+        {{#if isCurrentUser this.user}} 
+            <button class="delete-button" data-id="{{this._id}}">Eliminar</button> 
+            <button class="edit-button" data-id="{{this._id}}">Editar</button>
+        {{/if}}
+        </p>
+    {{/each}}
+</div>
+<form id="message-form">
+    <input type="email" id="user" name="user" placeholder="Tu correo electrónico" required>
+    <input type="text" id="message" name="message" placeholder="Escribe tu mensaje" required>
+    <button type="submit">Enviar</button>
+</form>
+
+<script>
+    const messageForm = document.getElementById('message-form');
+    const userField = document.getElementById('user');
+    const messageField = document.getElementById('message');
+    const currentUser = 'usuarioActual';
+
+    function isCurrentUser(messageUser) {
+        return messageUser === currentUser;
+    }
+
+    async function loadMessages() {
+        const response = await fetch('/api/messages');
+        if (response.ok) {
+            const messages = await response.json();
+            messages.forEach(message => addMessageToChat(message));
+        } else {
+            console.error('Error al cargar los mensajes');
+        }
+    }
+
+function addMessageToChat(message) {
+    const chatMessages = document.getElementById('chat-messages');
+    const existingMessage = document.getElementById(`message-${message._id}`);
+    if (existingMessage) {
+        chatMessages.replaceChild(getMessageElement(message), existingMessage);
+    } else {
+        const messageElement = document.createElement('p');
+        messageElement.setAttribute('id', `message-${message._id}`);
+        messageElement.innerHTML = `<strong>${message.user}</strong>: ${message.message} 
+        ${isCurrentUser(message.user) ? `
+            <button class="delete-button" data-id="${message._id}">Eliminar</button> 
+            <button class="edit-button" data-id="${message._id}">Editar</button>` : ''}
+        `;
+        chatMessages.appendChild(messageElement);
+    }
+}
+
+function getMessageElement(message) {
+    const messageElement = document.createElement('p');
+    messageElement.setAttribute('id', `message-${message._id}`);
+    messageElement.innerHTML = `<strong>${message.user}</strong>: ${message.message} 
+    ${isCurrentUser(message.user) ? `
+        <button class="delete-button" data-id="${message._id}">Eliminar</button> 
+        <button class="edit-button" data-id="${message._id}">Editar</button>` : ''}
+    `;
+    return messageElement;
+}
+
+
+    messageForm.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const user = userField.value;
+        const message = messageField.value;
+        if (user && message) {
+            const response = await fetch('/api/message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ user, message }),
+            });
+            if (response.ok) {
+                console.log('Mensaje enviado correctamente');
+                userField.disabled = true;
+                messageField.value = '';
+                messageField.focus();
+                await loadMessages();
+            } else {
+                console.error('Error al enviar el mensaje');
+            }
+        } else {
+            console.error('Por favor, complete todos los campos antes de enviar el mensaje.');
+        }
+    });
+
+    document.addEventListener('click', async (event) => {
+        if (event.target.classList.contains('delete-button')) {
+            const messageId = event.target.getAttribute('data-id');
+            const response = await fetch(`/api/message/${messageId}`, {
+                method: 'DELETE',
+            });
+            if (response.ok) {
+                console.log('Mensaje eliminado correctamente');
+                const messageElement = document.getElementById(`message-${messageId}`);
+                messageElement.remove();
+            } else {
+                console.error('Error al eliminar el mensaje');
+            }
+        } else if (event.target.classList.contains('edit-button')) {
+            const messageId = event.target.getAttribute('data-id');
+            const newMessage = prompt('Editar mensaje:', '');
+            if (newMessage !== null) {
+                const response = await fetch(`/api/message/${messageId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: newMessage }),
+                });
+                if (response.ok) {
+                    console.log('Mensaje editado correctamente');
+                    const messageElement = document.getElementById(`message-${messageId}`);
+                    const messageText = messageElement.querySelector('strong').nextSibling;
+                    messageText.textContent = newMessage;
+                } else {
+                    console.error('Error al editar el mensaje');
+                }
+            }
+        }
+    });
+    window.addEventListener('load', loadMessages);
+</script>

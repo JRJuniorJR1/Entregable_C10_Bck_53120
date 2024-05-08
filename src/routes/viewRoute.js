@@ -54,4 +54,8 @@ router.get('/realtimeproducts', async (req, res) => {
     }
 });
 
+router.get('/chat', (req, res) => {
+    res.render('pages/messages', { title: 'Chat en línea | 5PHNX' });
+});
+
 export default router;
