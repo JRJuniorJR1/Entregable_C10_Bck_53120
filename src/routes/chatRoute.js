@@ -24,30 +24,14 @@ const chatManager = new ChatManager(database);
 router.post('/message', async (req, res) => {
     const { user, message } = req.body;
     try {
-        req.app.get('io').emit('mensajeEnviado');
         const result = await chatManager.addMessage(user, message);
+        req.app.get('io').emit('mensajeEnviado', result);
         res.status(201).json(result);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
 });
 
-router.use('/message/:id', async (req, res, next) => {
-    const messageId = req.params.id;
-    const { user } = req.body;
-    try {
-        const message = await chatManager.getMessageById(messageId);
-        if (!message) {
-            return res.status(404).json({ error: 'Mensaje no encontrado' });
-        }
-        if (message.user !== user) {
-            return res.status(403).json({ error: 'No tienes permiso para realizar esta acción' });
-        }
-        next();
-    } catch (error) {
-        res.status(500).json({ error: error.message });
-    }
-});
 
 router.delete('/message/:id', async (req, res) => {
     const messageId = req.params.id;
@@ -69,7 +53,6 @@ router.put('/message/:id', async (req, res) => {
         res.status(500).json({ error: error.message });
     }
 });
-
 
 router.get('/messages', async (req, res) => {
     try {

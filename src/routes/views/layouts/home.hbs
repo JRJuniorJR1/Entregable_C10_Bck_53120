@@ -58,6 +58,10 @@
         socket.on('carritoEliminado', () => {
             location.reload();
         });
+
+        socket.on('mensajeEnviado', () => {
+            location.reload();
+        });
         
         const pageTitle = document.title;
 

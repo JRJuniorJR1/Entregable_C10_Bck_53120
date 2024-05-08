@@ -34,13 +34,28 @@
             console.error('Error al cargar los mensajes');
         }
     }
+    function mostrarNotificacion(titulo, mensaje) {
+        alert(`${titulo}: ${mensaje}`);
+    }
 
-function addMessageToChat(message) {
-    const chatMessages = document.getElementById('chat-messages');
-    const existingMessage = document.getElementById(`message-${message._id}`);
-    if (existingMessage) {
-        chatMessages.replaceChild(getMessageElement(message), existingMessage);
-    } else {
+    function addMessageToChat(message) {
+        const chatMessages = document.getElementById('chat-messages');
+        const existingMessage = document.getElementById(`message-${message._id}`);
+        if (existingMessage) {
+            chatMessages.replaceChild(getMessageElement(message), existingMessage);
+        } else {
+            const messageElement = document.createElement('p');
+            messageElement.setAttribute('id', `message-${message._id}`);
+            messageElement.innerHTML = `<strong>${message.user}</strong>: ${message.message} 
+            ${isCurrentUser(message.user) ? `
+                <button class="delete-button" data-id="${message._id}">Eliminar</button> 
+                <button class="edit-button" data-id="${message._id}">Editar</button>` : ''}
+            `;
+            chatMessages.appendChild(messageElement);
+        }
+    }
+
+    function getMessageElement(message) {
         const messageElement = document.createElement('p');
         messageElement.setAttribute('id', `message-${message._id}`);
         messageElement.innerHTML = `<strong>${message.user}</strong>: ${message.message} 
@@ -48,21 +63,8 @@ function addMessageToChat(message) {
             <button class="delete-button" data-id="${message._id}">Eliminar</button> 
             <button class="edit-button" data-id="${message._id}">Editar</button>` : ''}
         `;
-        chatMessages.appendChild(messageElement);
+        return messageElement;
     }
-}
-
-function getMessageElement(message) {
-    const messageElement = document.createElement('p');
-    messageElement.setAttribute('id', `message-${message._id}`);
-    messageElement.innerHTML = `<strong>${message.user}</strong>: ${message.message} 
-    ${isCurrentUser(message.user) ? `
-        <button class="delete-button" data-id="${message._id}">Eliminar</button> 
-        <button class="edit-button" data-id="${message._id}">Editar</button>` : ''}
-    `;
-    return messageElement;
-}
-
 
     messageForm.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -82,6 +84,7 @@ function getMessageElement(message) {
                 messageField.value = '';
                 messageField.focus();
                 await loadMessages();
+                mostrarNotificacion('Mensaje enviado', 'Tu mensaje ha sido enviado correctamente.');
             } else {
                 console.error('Error al enviar el mensaje');
             }
@@ -100,6 +103,7 @@ function getMessageElement(message) {
                 console.log('Mensaje eliminado correctamente');
                 const messageElement = document.getElementById(`message-${messageId}`);
                 messageElement.remove();
+                mostrarNotificacion('Mensaje eliminado', 'El mensaje ha sido eliminado correctamente.');
             } else {
                 console.error('Error al eliminar el mensaje');
             }
@@ -119,6 +123,7 @@ function getMessageElement(message) {
                     const messageElement = document.getElementById(`message-${messageId}`);
                     const messageText = messageElement.querySelector('strong').nextSibling;
                     messageText.textContent = newMessage;
+                    mostrarNotificacion('Mensaje editado', 'El mensaje ha sido editado correctamente.');
                 } else {
                     console.error('Error al editar el mensaje');
                 }
