@@ -52,6 +52,12 @@
             })
             .then(response => response.json())
             .then(data => {
+                const productElement = document.querySelector(`li[data-product-id="${pid}"]`);
+                productElement.innerHTML = `
+                    Id: ${pid} - Producto: ${data.title} - Precio ${data.price} - Cantidad: ${newQuantity} - Total: 
+                    <button onclick="editProduct('${cid}', '${pid}')">Editar</button>
+                    <button onclick="deleteProduct('${cid}', '${pid}')">Eliminar</button>
+                `;
                 alert(data.message);
             })
             .catch(error => console.error('Error:', error));
@@ -59,7 +65,6 @@
             alert('Por favor ingrese la nueva cantidad.');
         }
     }
-
     function deleteProduct(cid, pid) {
         const confirmDelete = confirm('¿Estás seguro de que deseas eliminar este producto del carrito?');
         if (confirmDelete) {

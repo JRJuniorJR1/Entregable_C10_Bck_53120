@@ -30,19 +30,26 @@ export class CartManager {
 
   async updateProduct(cid, pid, updatedFields) {
     try {
-      const result = await this.collection.updateOne(
-        { _id: new ObjectId(cid), "products.productId": new ObjectId(pid) },
-        { $set: { "products.$[element]": { ...updatedFields, productId: new ObjectId(pid) } } },
-        { arrayFilters: [{ "element.productId": new ObjectId(pid) }] }
-      );
-      if (result.modifiedCount === 0) {
-        throw new Error("Producto no encontrado.");
-      }
-      return { message: "Producto actualizado con éxito." };
+        const result = await this.collection.updateOne(
+            { _id: new ObjectId(cid), "products.productId": new ObjectId(pid) },
+            { $set: { "products.$[element].quantity": updatedFields.quantity } },
+            { arrayFilters: [{ "element.productId": new ObjectId(pid) }] }
+        );
+
+        if (result.modifiedCount === 0) {
+            throw new Error("Producto no encontrado.");
+        }
+        const cart = await this.collection.findOne({ _id: new ObjectId(cid) });
+        const updatedProduct = cart.products.find(p => p.productId.toString() === pid);
+
+        return {
+            message: "Producto actualizado con éxito.",
+            updatedProduct
+        };
     } catch (error) {
-      throw new Error('Error al actualizar el producto: ' + error.message);
+        throw new Error('Error al actualizar el producto: ' + error.message);
     }
-  }
+}
 
   async getCartById(id) {
     try {
