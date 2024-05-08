@@ -1,6 +1,6 @@
 import express from 'express';
-import { CartManager } from '../dao/models/CartManager.js';
-import { ProductManager } from '../dao/models/ProductManager.js';
+import { CartManager } from '../dao/CartManager.js';
+import { ProductManager } from '../dao/ProductManager.js';
 import { MongoClient, ObjectId } from 'mongodb';
 
 const router = express.Router();
