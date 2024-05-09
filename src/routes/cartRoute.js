@@ -66,8 +66,6 @@ router.post('/:cid/product/:pid', async (req, res) => {
     }
 });
 
-
-
 router.put('/:cid/products/:pid', async (req, res) => {
     try {
         req.app.get('io').emit('carritoActualizado');

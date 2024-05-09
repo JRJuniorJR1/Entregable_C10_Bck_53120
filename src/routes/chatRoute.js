@@ -26,7 +26,7 @@ router.post('/message', async (req, res) => {
     try {
         const result = await chatManager.addMessage(user, message);
         req.app.get('io').emit('mensajeEnviado', result);
-        res.status(201).json(result);
+        res.status(201).json({ message: 'Mensaje agregado satisfactoriamente', data: result });
     } catch (error) {
         res.status(500).json({ error: error.message });
     }
@@ -58,6 +58,7 @@ router.get('/messages', async (req, res) => {
     try {
         const messages = await chatManager.getAllMessages();
         res.json(messages);
+        req.app.get('io').emit('mensajeRecibido', messages);
     } catch (error) {
         res.status(500).json({ error: error.message });
     }

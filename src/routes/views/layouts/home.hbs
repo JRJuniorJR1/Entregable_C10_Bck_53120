@@ -20,8 +20,9 @@
     {{{body}}}
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.3.2/socket.io.js"></script>
-    <script>
 
+    <script>
+        
         const socket = io();
 
 
@@ -38,7 +39,7 @@
         });
 
 
-        
+
         socket.on('carritoAgregado', () => {
             location.reload();
         });
@@ -59,10 +60,15 @@
             location.reload();
         });
 
-        socket.on('mensajeEnviado', () => {
-            location.reload();
+
+        socket.on('mensajeEnviado', (result) => {
+            addMessageToChat(result);
         });
-        
+
+        socket.on('mensajeRecibido', (messages) => {
+            messages.forEach(message => addMessageToChat(message));
+        });
+
         const pageTitle = document.title;
 
         socket.emit('pageConnected', pageTitle);
@@ -71,9 +77,7 @@
             socket.emit('pageDisconnected', pageTitle);
         };
 
-
     </script>
-
 </body>
 </html>
 

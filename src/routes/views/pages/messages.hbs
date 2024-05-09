@@ -8,12 +8,14 @@
         {{/if}}
         </p>
     {{/each}}
+
 </div>
 <form id="message-form">
     <input type="email" id="user" name="user" placeholder="Tu correo electrónico" required>
     <input type="text" id="message" name="message" placeholder="Escribe tu mensaje" required>
     <button type="submit">Enviar</button>
 </form>
+
 
 <script>
     const messageForm = document.getElementById('message-form');
@@ -25,28 +27,37 @@
         return messageUser === currentUser;
     }
 
-    async function loadMessages() {
-        const response = await fetch('/api/messages');
-        if (response.ok) {
-            const messages = await response.json();
-            messages.forEach(message => addMessageToChat(message));
-        } else {
-            console.error('Error al cargar los mensajes');
-        }
+async function loadMessages() {
+    const response = await fetch('/api/messages');
+    if (response.ok) {
+        const messages = await response.json();
+        const chatMessages = document.getElementById('chat-messages');
+        const lastMessageId = chatMessages.lastElementChild ? chatMessages.lastElementChild.id.replace('message-', '') : null;
+        messages.forEach(message => {
+            if (message._id !== lastMessageId) {
+                addMessageToChat(message);
+            }
+        });
+    } else {
+        console.error('Error al cargar los mensajes');
     }
+}
+
     function mostrarNotificacion(titulo, mensaje) {
         alert(`${titulo}: ${mensaje}`);
     }
 
-    function addMessageToChat(message) {
-        const chatMessages = document.getElementById('chat-messages');
+function addMessageToChat(message) {
+    const chatMessages = document.getElementById('chat-messages');
+    if (message && message._id) {
         const existingMessage = document.getElementById(`message-${message._id}`);
         if (existingMessage) {
-            chatMessages.replaceChild(getMessageElement(message), existingMessage);
+            existingMessage.querySelector('strong').textContent = message.user;
+            existingMessage.querySelector('span').textContent = message.message;
         } else {
             const messageElement = document.createElement('p');
             messageElement.setAttribute('id', `message-${message._id}`);
-            messageElement.innerHTML = `<strong>${message.user}</strong>: ${message.message} 
+            messageElement.innerHTML = `<strong>${message.user}</strong>: <span>${message.message}</span> 
             ${isCurrentUser(message.user) ? `
                 <button class="delete-button" data-id="${message._id}">Eliminar</button> 
                 <button class="edit-button" data-id="${message._id}">Editar</button>` : ''}
@@ -54,6 +65,9 @@
             chatMessages.appendChild(messageElement);
         }
     }
+}
+
+
 
     function getMessageElement(message) {
         const messageElement = document.createElement('p');
@@ -66,32 +80,39 @@
         return messageElement;
     }
 
-    messageForm.addEventListener('submit', async (event) => {
-        event.preventDefault();
-        const user = userField.value;
-        const message = messageField.value;
-        if (user && message) {
-            const response = await fetch('/api/message', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ user, message }),
-            });
-            if (response.ok) {
-                console.log('Mensaje enviado correctamente');
+messageForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    const user = userField.value;
+    const message = messageField.value;
+    if (user && message) {
+        const response = await fetch('/api/message', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ user, message }),
+        });
+        if (response.ok) {
+            const data = await response.json();
+            if (data && data.data) {
+                addMessageToChat(data.data);
                 userField.disabled = true;
                 messageField.value = '';
                 messageField.focus();
-                await loadMessages();
-                mostrarNotificacion('Mensaje enviado', 'Tu mensaje ha sido enviado correctamente.');
+//              mostrarNotificacion('Mensaje enviado', 'Tu mensaje ha sido enviado correctamente.');
+                loadMessages();
             } else {
-                console.error('Error al enviar el mensaje');
+                console.error('Error: no se recibió un mensaje válido del servidor');
             }
         } else {
-            console.error('Por favor, complete todos los campos antes de enviar el mensaje.');
+            console.error('Error al enviar el mensaje');
         }
-    });
+    } else {
+        console.error('Por favor, complete todos los campos antes de enviar el mensaje.');
+    }
+});
+
+
 
     document.addEventListener('click', async (event) => {
         if (event.target.classList.contains('delete-button')) {
